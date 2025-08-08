@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Markets Overview</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* Controls minimum block width and responsiveness */
+            gap: 60px; /* Controls space between blocks */
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        .market-block {
+            position: relative;
+            background-color: #ecf0f1;
+            padding: 15px; /* Default padding for blocks */
+            min-height: 30px; /* Default minimum height for blocks */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease, border-radius 0.3s ease, padding 0.3s ease, width 0.3s ease, height 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        .market-block:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .market-block.revealed {
+            cursor: default;
+        }
+
+        .cover-block {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1em; /* Font size for the "Click to Reveal" text */
+            transition: opacity 0.5s ease-out, background-color 0.3s ease;
+            opacity: 1;
+            z-index: 1;
+            text-align: center;
+            padding: 3px;
+        }
+
+        .market-block.revealed .cover-block {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .market-text {
+            font-size: 0.9em; /* Font size for the revealed market text */
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+            position: relative;
+            z-index: 0;
+            padding: 3px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .grid-container {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+                gap: 30px; /* Adjusted gap for smaller screens */
+            }
+            .market-block {
+                min-height: 30px;
+                padding: 8px;
+            }
+            .cover-block {
+                font-size: 0.8em;
+            }
+            .market-text {
+                font-size: 0.7em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Explore Financial Markets</h1>
+        <div class="grid-container" id="marketGrid">
+            <!-- Market blocks will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const markets = [
+            "Gold market", "Oil market", "Stock market", "Option market",
+            "Primary market", "Secondary market", "Bond market", "IPO market",
+            "Mortgage market", "Money market", "Foreign Exchange market",
+            "Derivative market", "Capital market", "Debt market", "Equity market",
+            "Commodity market", "Energy market", "Cryptocurrency",
+            "Treasury bond market", "Corporate bond market", "Municipal bond market",
+            "Bank loan market", "Futures/Forward market", "Insurance Markets",
+            "Alternative market"
+        ];
+
+        // Define market categories and their associated colors
+        const marketCategories = {
+            "Equity/General Capital Markets": ["Stock market", "Primary market", "Secondary market", "Capital market", "Equity market", "IPO market"],
+            "Debt/Bond Markets": ["Bond market", "Mortgage market", "Debt market", "Treasury bond market", "Corporate bond market", "Municipal bond market", "Bank loan market", "Money market"],
+            "Commodity/Energy/Derivatives Markets": ["Gold market", "Oil market", "Commodity market", "Energy market", "Derivative market", "Futures/Forward market", "Option market"],
+            "Cryptocurrency": ["Cryptocurrency"],
+            "Other Financial Markets": ["Foreign Exchange market", "Insurance Markets", "Alternative market"]
+        };
+
+        const categoryColors = {
+            "Equity/General Capital Markets": { cover: "#28a745", revealed: "#d4edda" }, // Greenish
+            "Debt/Bond Markets": { cover: "#007bff", revealed: "#cfe2ff" }, // Bluish
+            "Commodity/Energy/Derivatives Markets": { cover: "#ffc107", revealed: "#fff3cd" }, // Yellowish/Orange
+            "Cryptocurrency": { cover: "#8a2be2", revealed: "#e6e6fa" }, // Purple
+            "Other Financial Markets": { cover: "#dc3545", revealed: "#f8d7da" } // Reddish
+        };
+
+        const marketGrid = document.getElementById('marketGrid');
+
+        // Function to get the category and colors for a given market name
+        function getMarketCategoryAndColors(marketName) {
+            for (const category in marketCategories) {
+                if (marketCategories[category].includes(marketName)) {
+                    return categoryColors[category];
+                }
+            }
+            return { cover: "#6c757d", revealed: "#e2e6ea" }; // Default grey if no category found
+        }
+
+        // Function to create and append a market block
+        function createMarketBlock(marketName) {
+            const block = document.createElement('div');
+            block.classList.add('market-block');
+
+            const colors = getMarketCategoryAndColors(marketName);
+            const shapeType = Math.random();
+
+            // --- Enhanced Variation for Size and Shape ---
+            if (marketName === "Cryptocurrency") {
+                // Set specific, larger values for the Cryptocurrency block
+                block.style.padding = `15px 20px`;
+                block.style.minWidth = `100px`;
+                block.style.minHeight = `60px`;
+                block.style.borderRadius = '20px'; // A fixed, larger rounded rectangle
+            } else {
+                // Apply the smaller, random sizes for all other blocks
+                // Random border-radius for shape variation (more distinct values, including circular)
+                if (shapeType < 0.2) { // Roughly 20% chance for a perfect circle/oval
+                    block.style.borderRadius = '50%';
+                } else if (shapeType < 0.5) { // Roughly 30% chance for a very rounded rectangle/pill
+                    block.style.borderRadius = `${Math.floor(Math.random() * 20) + 5}px`; // 5-25px
+                } else { // Remaining 50% for varied corner radii
+                    const borderRadiusTopLeft = Math.floor(Math.random() * 4) * 5; // 0, 5, 10, 15
+                    const borderRadiusTopRight = Math.floor(Math.random() * 4) * 5;
+                    const borderRadiusBottomRight = Math.floor(Math.random() * 4) * 5;
+                    const borderRadiusBottomLeft = Math.floor(Math.random() * 4) * 5;
+                    block.style.borderRadius = `${borderRadiusTopLeft}px ${borderRadiusTopRight}px ${borderRadiusBottomRight}px ${borderRadiusBottomLeft}px`;
+                }
+
+                // Random padding for size variation (smaller range)
+                const paddingVertical = Math.floor(Math.random() * 3) * 3 + 5; // 5, 8, 11
+                const paddingHorizontal = Math.floor(Math.random() * 3) * 3 + 8; // 8, 11, 14
+                block.style.padding = `${paddingVertical}px ${paddingHorizontal}px`;
+
+                // Random min-width and min-height for more size variation (smaller blocks)
+                const minWidth = Math.floor(Math.random() * 4) * 10 + 60; // 60, 70, 80, 90
+                const minHeight = Math.floor(Math.random() * 4) * 10 + 30; // 30, 40, 50, 60
+                block.style.minWidth = `${minWidth}px`;
+                block.style.minHeight = `${minHeight}px`;
+            }
+
+            // Random rotation for visual interest
+            const rotation = Math.floor(Math.random() * 10) - 5; // -5 to +4 degrees
+            block.style.transform = `rotate(${rotation}deg)`;
+            // --- End Enhanced Variation ---
+
+            const textSpan = document.createElement('span');
+            textSpan.classList.add('market-text');
+            textSpan.textContent = marketName;
+
+            const coverBlock = document.createElement('div');
+            coverBlock.classList.add('cover-block');
+            coverBlock.textContent = "Click to Reveal"; // Text on the cover
+            coverBlock.style.backgroundColor = colors.cover; // Apply category cover color
+
+            block.appendChild(textSpan);
+            block.appendChild(coverBlock);
+
+            // Add click event listener to reveal the text
+            block.addEventListener('click', function() {
+                if (!block.classList.contains('revealed')) {
+                    block.classList.add('revealed');
+                    block.style.backgroundColor = colors.revealed; // Apply category revealed color
+                }
+            });
+
+            marketGrid.appendChild(block);
+        }
+
+        // Populate the grid with market blocks
+        markets.forEach(market => {
+            createMarketBlock(market);
+        });
+    </script>
+</body>
+</html>
